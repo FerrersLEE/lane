@@ -1,1 +1,1 @@
-{"name":"personal-security-notes","private":true,"type":"module","scripts":{"dev":"astro dev","build":"astro check && astro build","preview":"astro preview"},"dependencies":{"@astrojs/mdx":"^4.3.0","@astrojs/rss":"^4.0.0","astro":"^5.12.0"}}
+{"name":"personal-security-notes","private":true,"type":"module","scripts":{"dev":"astro dev","build":"astro check && astro build","preview":"astro preview"},"dependencies":{"@astrojs/mdx":"^4.3.0","@astrojs/rss":"^4.0.0","astro":"^5.12.0"},"devDependencies":{"@astrojs/check":"^0.9.10","typescript":"^5.9.3"}}
