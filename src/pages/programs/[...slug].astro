@@ -1,0 +1,6 @@
+---
+import { getCollection, render } from "astro:content"; import BaseLayout from "../../layouts/BaseLayout.astro";
+export async function getStaticPaths(){const entries=await getCollection("programs",({data})=>!data.draft);return entries.map((entry)=>({params:{slug:entry.id},props:{entry}}));}
+const {entry}=Astro.props; const {Content}=await render(entry);
+---
+<BaseLayout title={`${entry.data.title} · 你的名字`} description={entry.data.description}><article class="article"><div class="meta">项目 · {entry.data.status ?? "进行中"}</div><h1>{entry.data.title}</h1><p class="lead">{entry.data.description}</p><div class="tags">{entry.data.techStack.map((tag)=><span class="tag">{tag}</span>)}</div><div class="article-content"><Content /></div></article></BaseLayout>

@@ -1,4 +1,5 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content"; import BaseLayout from "../../layouts/BaseLayout.astro";
+const entries=(await getCollection("notes",({data})=>!data.draft)).sort((a,b)=>b.data.published.valueOf()-a.data.published.valueOf());
 ---
-<BaseLayout title="笔记 · 你的名字"><article class="article"><h1>笔记</h1><p class="lead">学习过程中的记录、实验和总结。</p><p><a href="/notes/first-note">第一篇学习笔记</a></p></article></BaseLayout>
+<BaseLayout title="笔记 · 你的名字"><article class="article"><h1>笔记</h1><p class="lead">学习过程中的记录、实验和总结。</p><div class="grid">{entries.map((entry)=><article class="card"><div class="meta">{entry.data.published.toLocaleDateString("zh-CN")}</div><h3><a href={`/notes/${entry.id}`}>{entry.data.title}</a></h3><p>{entry.data.description}</p></article>)}</div></article></BaseLayout>
