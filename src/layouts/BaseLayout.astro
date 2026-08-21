@@ -1,0 +1,5 @@
+---
+import "../styles/global.css";
+const {title="个人博客",description="记录学习、项目与安全研究。"}=Astro.props;
+---
+<html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/><title>{title}</title></head><body><header><div class="shell nav"><a class="brand" href="/">你的名字</a><nav><a href="/notes">笔记</a><a href="/programs">项目</a><a href="/about">关于</a><button id="theme">◐</button></nav></div></header><main class="shell"><slot/></main><footer><div class="shell">© 2026 你的名字 · <a href="/rss.xml">RSS</a> · <a href="https://github.com/">GitHub</a></div></footer><script is:inline>{`const r=document.documentElement;if(localStorage.theme==='dark')r.classList.add('dark');theme.onclick=()=>{r.classList.toggle('dark');localStorage.theme=r.classList.contains('dark')?'dark':'light'}`}</script></body></html>
