@@ -26,7 +26,7 @@ export async function GET(context) {
   ].sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
 
   return rss({
-    title: '你的名字 · 学习与安全研究',
+    title: 'Lane · 学习与安全研究',
     description: '学习笔记、项目实践与安全研究。',
     site: context.site,
     items,
