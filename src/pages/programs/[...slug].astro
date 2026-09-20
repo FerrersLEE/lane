@@ -32,7 +32,9 @@ const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
     <h1>{entry.data.title}</h1>
     <p class="lead">{entry.data.description}</p>
     <div class="tags">
-      {entry.data.techStack.map((tag) => `<a href="/tags/${tag}" style="color:var(--muted);font-size:.85rem">#${tag}</a>`).join(" ")}
+      {entry.data.techStack.map((tag) => (
+        <a href={`/tags/${tag}`} style="color:var(--muted);font-size:.85rem">#{tag}</a>
+      ))}
     </div>
     <div class="article-content"><Content /></div>
 
