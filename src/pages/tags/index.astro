@@ -1,4 +1,4 @@
-﻿---
+---
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
@@ -26,23 +26,22 @@ const tags = [...tagMap.entries()]
   .map(([name, data]) => ({ name, ...data }))
   .sort((a, b) => b.count - a.count);
 ---
-<BaseLayout title="标签 · Lane">
-  <article class="article">
-    <h1>所有标签</h1>
-    <p class="lead">共 {tags.length} 个标签，浏览感兴趣的主题。</p>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">
-      {tags.map((tag) => (
-        <a
-          href={`/tags/${tag.name}`}
-          style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--text);text-decoration:none;transition:all .2s"
-          onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-1px)'"
-          onmouseout="this.style.borderColor='var(--line)';this.style.transform='translateY(0)'"
-        >
-          <span style="font-weight:500">#{tag.name}</span>
-          <span style="font-size:.8rem;color:var(--muted)">{tag.count}</span>
-        </a>
-      ))}
-    </div>
-    {tags.length === 0 && <p style="color:var(--muted)">还没有标签。</p>}
-  </article>
+
+<BaseLayout title="标签 · Lane · 研究手帖" description="按标签浏览所有笔记和项目。">
+  <header class="page-head reveal">
+    <p class="eyebrow">/ 03 — Tags</p>
+    <h1>标签索引</h1>
+    <p class="page-desc">共 {tags.length} 个标签，顺着主题线索翻阅感兴趣的内容。</p>
+  </header>
+
+  <div class="tag-cloud">
+    {tags.map((tag, i) => (
+      <a class={`pill reveal reveal-d${(i % 5) + 1}`} href={`/tags/${tag.name}`} style={tag.count >= 3 ? "font-size:.85rem;padding:6px 14px" : ""}>
+        <span>#{tag.name}</span>
+        <span class="pill-count">{String(tag.count).padStart(2, "0")}</span>
+      </a>
+    ))}
+  </div>
+
+  {tags.length === 0 && <p class="kicker">还没有标签。</p>}
 </BaseLayout>

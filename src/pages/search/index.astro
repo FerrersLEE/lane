@@ -1,23 +1,29 @@
-﻿---
+---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="搜索 · Lane">
-  <article class="article">
-    <h1>搜索</h1>
-    <p class="lead">在笔记和项目中搜索关键词。</p>
+
+<BaseLayout title="搜索 · Lane · 研究手帖" description="在笔记和项目中搜索关键词。">
+  <header class="page-head reveal">
+    <p class="eyebrow">/ 04 — Search</p>
+    <h1>全文检索</h1>
+    <p class="page-desc">在所有笔记和项目中检索标题、标签、摘要与正文。</p>
+  </header>
+
+  <div class="search-input-wrap reveal reveal-d1">
+    <span class="search-prefix">$</span>
     <input
       id="search-input"
       aria-label="搜索文章"
       type="search"
-      placeholder="输入关键词，如：安全、Astro、Python..."
+      placeholder="grep -r '关键词' ./notes ..."
       autocomplete="off"
-      style="width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font-size:1rem;outline:none;transition:border-color .2s"
-      onfocus="this.style.borderColor='var(--accent)'"
-      onblur="this.style.borderColor='var(--line)'"
+      class="search-input"
     />
-    <div id="search-stats" style="margin-top:16px;color:var(--muted);font-size:.9rem;min-height:1.5rem"></div>
-    <div id="search-results" class="grid" style="margin-top:20px"></div>
-  </article>
+  </div>
+  <p class="search-hint reveal reveal-d1">按 <kbd>/</kbd> 快速聚焦 · <kbd>Esc</kbd> 清空</p>
+
+  <div id="search-stats" class="kicker" style="margin-top:20px;min-height:1.4rem"></div>
+  <div id="search-results" style="margin-top:18px"></div>
 
   <script is:inline>
     (function() {
@@ -37,7 +43,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             loaded = true;
           })
           .catch(function() {
-            if (statsEl) statsEl.textContent = '搜索索引加载失败';
+            if (statsEl) statsEl.textContent = '// 搜索索引加载失败';
           });
       }
 
@@ -65,7 +71,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             if (descMatch) score += 3;
             if (contentMatch) score += 1;
 
-            return { item: item, score: score, contentMatch: contentMatch };
+            return { item: item, score: score };
           })
           .filter(function(r) { return r.score > 0; })
           .sort(function(a, b) { return b.score - a.score; })
@@ -81,39 +87,45 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         return (start > 0 ? '...' : '') + content.slice(start, end) + (end < content.length ? '...' : '');
       }
 
+      function escapeHtml(s) {
+        return s.replace(/[&<>"]/g, function(c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+        });
+      }
+
       function renderResults(results, query) {
         if (!query.trim()) {
-          if (resultsEl) resultsEl.innerHTML = '';
-          if (statsEl) statsEl.textContent = '输入关键词开始搜索';
+          resultsEl.innerHTML = '';
+          statsEl.textContent = '// 输入关键词开始搜索';
           return;
         }
 
         if (results.length === 0) {
-          if (resultsEl) resultsEl.innerHTML = '';
-          if (statsEl) statsEl.textContent = '没有找到与 "' + query + '" 相关的内容';
+          resultsEl.innerHTML = '';
+          statsEl.textContent = '// 没有找到与 “' + escapeHtml(query) + '” 相关的内容';
           return;
         }
 
-        if (statsEl) statsEl.textContent = '找到 ' + results.length + ' 个结果';
+        statsEl.textContent = '// 找到 ' + results.length + ' 个结果';
 
-        if (resultsEl) {
-          resultsEl.innerHTML = results
-            .map(function(item) {
-              var typeLabel = item.type === 'note' ? '笔记' : '项目';
-              var typeBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:6px;background:var(--accent);color:#fff;font-size:.75rem;margin-right:8px">' + typeLabel + '</span>';
-              var snippet = item.content ? getSnippet(item.content, query) : item.description;
-              var tagsHtml = item.tags.map(function(t) { return '<span class="tag">#' + t + '</span>'; }).join(' ');
-              return (
-                '<article class="card" style="cursor:pointer" onclick="location.href=\'' + item.url + '\'">' +
-                  '<div class="meta">' + typeBadge + new Date(item.published).toLocaleDateString("zh-CN") + '</div>' +
-                  '<h3 style="margin:8px 0"><a href="' + item.url + '" style="color:var(--text)">' + highlight(item.title, query) + '</a></h3>' +
-                  '<p style="color:var(--muted);font-size:.9rem;line-height:1.6">' + highlight(snippet, query) + '</p>' +
-                  '<div style="margin-top:8px">' + tagsHtml + '</div>' +
-                '</article>'
-              );
-            })
-            .join('');
-        }
+        resultsEl.innerHTML = results.map(function(item) {
+          var typeLabel = item.type === 'note' ? '笔记' : '项目';
+          var snippet = item.content ? getSnippet(item.content, query) : item.description;
+          var tagsHtml = item.tags.map(function(t) {
+            return '<span class="pill">#' + escapeHtml(t) + '</span>';
+          }).join('');
+          return (
+            '<a class="card-hard search-result-card reveal" href="' + item.url + '">' +
+              '<div class="result-top">' +
+                '<span class="pill pill-solid">' + typeLabel + '</span>' +
+                '<span>' + new Date(item.published).toLocaleDateString('zh-CN') + '</span>' +
+              '</div>' +
+              '<h3>' + highlight(escapeHtml(item.title), query) + '</h3>' +
+              '<p class="result-snippet">' + highlight(escapeHtml(snippet), query) + '</p>' +
+              '<div class="result-tags">' + tagsHtml + '</div>' +
+            '</a>'
+          );
+        }).join('');
       }
 
       var debounceTimer = null;
@@ -123,45 +135,36 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           if (debounceTimer) clearTimeout(debounceTimer);
           debounceTimer = setTimeout(function() {
             loadIndex().then(function() {
-              var results = search(query);
-              renderResults(results, query);
+              renderResults(search(query), query);
             });
           }, 150);
         });
       }
+
+      // 键盘快捷键：/ 聚焦，Esc 清空
+      document.addEventListener('keydown', function(e) {
+        if (e.key === '/' && document.activeElement !== input) {
+          e.preventDefault();
+          input.focus();
+        }
+        if (e.key === 'Escape' && document.activeElement === input) {
+          input.value = '';
+          renderResults([], '');
+          input.blur();
+        }
+      });
 
       // 支持 URL 参数直接搜索
       var params = new URLSearchParams(window.location.search);
       var q = params.get('q');
       if (q && input) {
         input.value = q;
-        input.dispatchEvent(new Event('input'));
+        loadIndex().then(function() {
+          renderResults(search(q), q);
+        });
       } else if (statsEl) {
-        statsEl.textContent = '输入关键词开始搜索';
+        statsEl.textContent = '// 输入关键词开始搜索';
       }
     })();
   </script>
-
-  <style is:global>
-    mark {
-      background: #fef08a;
-      color: #172033;
-      padding: 0 2px;
-      border-radius: 3px;
-    }
-    .dark mark {
-      background: #854d0e;
-      color: #fef9c3;
-    }
-    .tag {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 6px;
-      background: var(--line);
-      color: var(--muted);
-      font-size: 0.75rem;
-      margin-right: 6px;
-      margin-bottom: 4px;
-    }
-  </style>
 </BaseLayout>

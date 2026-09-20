@@ -1,5 +1,36 @@
-﻿---
-import { getCollection } from "astro:content"; import BaseLayout from "../../layouts/BaseLayout.astro";
-const entries=(await getCollection("notes",({data})=>!data.draft)).sort((a,b)=>b.data.published.valueOf()-a.data.published.valueOf());
 ---
-<BaseLayout title="笔记 · Lane"><article class="article"><h1>笔记</h1><p class="lead">学习过程中的记录、实验和总结。</p><div class="grid">{entries.map((entry)=><article class="card"><div class="meta">{entry.data.published.toLocaleDateString("zh-CN")}</div><h3><a href={`/notes/${entry.id}`}>{entry.data.title}</a></h3><p>{entry.data.description}</p></article>)}</div></article></BaseLayout>
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const entries = (await getCollection("notes", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+
+const pad = (n: number) => String(n + 1).padStart(2, "0");
+---
+
+<BaseLayout title="笔记 · Lane · 研究手帖" description="学习过程中的记录、实验和总结。">
+  <header class="page-head reveal">
+    <p class="eyebrow">/ 01 — Notes</p>
+    <h1>笔记档案</h1>
+    <p class="page-desc">学习过程中的记录、实验和总结。共 {entries.length} 篇，按时间倒序排列。</p>
+  </header>
+
+  <div>
+    {entries.map((entry, i) => (
+      <a class={`post-row reveal reveal-d${(i % 4) + 1}`} href={`/notes/${entry.id}`}>
+        <span class="row-index">{pad(i)}</span>
+        <span class="row-date">{entry.data.published.toLocaleDateString("zh-CN")}</span>
+        <span>
+          <span class="row-title">{entry.data.title}</span>
+          <p class="row-desc">{entry.data.description}</p>
+          <span class="row-tags">
+            {entry.data.tags.slice(0, 4).map((tag) => (
+              <span class="pill">#{tag}</span>
+            ))}
+          </span>
+        </span>
+        <span class="row-arrow">→</span>
+      </a>
+    ))}
+  </div>
+</BaseLayout>

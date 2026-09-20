@@ -25,42 +25,56 @@ const notes = (await getCollection("notes", ({ data }) => !data.draft && data.ta
 const programs = (await getCollection("programs", ({ data }) => !data.draft && data.tags.includes(tag)))
   .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
 ---
+
 <BaseLayout title={`#${tag} · Lane`} description={`标签 ${tag} 下的所有笔记和项目`}>
-  <article class="article">
-    <p style="margin-bottom:8px">
-      <a href="/tags" style="color:var(--muted);font-size:.9rem">← 返回所有标签</a>
+  <header class="page-head reveal">
+    <p class="kicker" style="margin-bottom:10px"><a href="/tags" style="color:var(--muted)">← 返回所有标签</a></p>
+    <p class="eyebrow">/ Tag</p>
+    <h1>#{tag}</h1>
+    <p class="page-desc">
+      共 {notes.length + programs.length} 篇内容 — {notes.length} 篇笔记 · {programs.length} 个项目
     </p>
-    <h1 style="margin-top:0">#{tag}</h1>
-    <p class="lead">共 {notes.length + programs.length} 篇内容（{notes.length} 篇笔记，{programs.length} 个项目）。</p>
+  </header>
 
-    {notes.length > 0 && (
-      <>
-        <h2 style="margin-top:32px">笔记</h2>
-        <div class="grid">
-          {notes.map((entry) => (
-            <article class="card">
-              <div class="meta">{entry.data.published.toLocaleDateString("zh-CN")}</div>
-              <h3><a href={`/notes/${entry.id}`}>{entry.data.title}</a></h3>
-              <p>{entry.data.description}</p>
-            </article>
-          ))}
-        </div>
-      </>
-    )}
+  {notes.length > 0 && (
+    <section style="margin-bottom:56px">
+      <div class="section-head reveal">
+        <h2><span class="sec-num">/ 01</span>笔记</h2>
+      </div>
+      <div>
+        {notes.map((entry, i) => (
+          <a class={`post-row reveal reveal-d${(i % 4) + 1}`} href={`/notes/${entry.id}`}>
+            <span class="row-index">{String(i + 1).padStart(2, "0")}</span>
+            <span class="row-date">{entry.data.published.toLocaleDateString("zh-CN")}</span>
+            <span>
+              <span class="row-title">{entry.data.title}</span>
+              <p class="row-desc">{entry.data.description}</p>
+            </span>
+            <span class="row-arrow">→</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
 
-    {programs.length > 0 && (
-      <>
-        <h2 style="margin-top:32px">项目</h2>
-        <div class="grid">
-          {programs.map((entry) => (
-            <article class="card">
-              <div class="meta">{entry.data.status ?? "进行中"}</div>
-              <h3><a href={`/programs/${entry.id}`}>{entry.data.title}</a></h3>
-              <p>{entry.data.description}</p>
-            </article>
-          ))}
-        </div>
-      </>
-    )}
-  </article>
+  {programs.length > 0 && (
+    <section>
+      <div class="section-head reveal">
+        <h2><span class="sec-num">/ 02</span>项目</h2>
+      </div>
+      <div class="proj-grid">
+        {programs.map((entry, i) => (
+          <a class={`card-hard proj-card reveal reveal-d${(i % 3) + 1}`} href={`/programs/${entry.id}`}>
+            <div class="proj-top">
+              <span class={`badge ${entry.data.status?.includes("完成") ? "badge-done" : "badge-active"}`}>
+                {entry.data.status ?? "进行中"}
+              </span>
+            </div>
+            <h3>{entry.data.title}</h3>
+            <p>{entry.data.description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
 </BaseLayout>

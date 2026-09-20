@@ -1,5 +1,38 @@
-﻿---
-import { getCollection } from "astro:content"; import BaseLayout from "../../layouts/BaseLayout.astro";
-const entries=(await getCollection("programs",({data})=>!data.draft)).sort((a,b)=>b.data.published.valueOf()-a.data.published.valueOf());
 ---
-<BaseLayout title="项目 · Lane"><article class="article"><h1>项目</h1><p class="lead">正在做和已经完成的项目。</p><div class="grid">{entries.map((entry)=><article class="card"><div class="meta">{entry.data.status ?? "进行中"}</div><h3><a href={`/programs/${entry.id}`}>{entry.data.title}</a></h3><p>{entry.data.description}</p><div class="tags">{entry.data.techStack.map((tag)=><span class="tag">{tag}</span>)}</div></article>)}</div></article></BaseLayout>
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const entries = (await getCollection("programs", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+---
+
+<BaseLayout title="项目 · Lane · 研究手帖" description="正在做和已经完成的项目。">
+  <header class="page-head reveal">
+    <p class="eyebrow">/ 02 — Projects</p>
+    <h1>项目工坊</h1>
+    <p class="page-desc">正在做和已经完成的项目。共 {entries.length} 个。</p>
+  </header>
+
+  <div class="proj-grid">
+    {entries.map((entry, i) => (
+      <a
+        class={`card-hard proj-card reveal reveal-d${(i % 3) + 1}`}
+        href={`/programs/${entry.id}`}
+      >
+        <div class="proj-top">
+          <span class={`badge ${entry.data.status?.includes("完成") ? "badge-done" : "badge-active"}`}>
+            {entry.data.status ?? "进行中"}
+          </span>
+          <span class="kicker">{entry.data.published.toLocaleDateString("zh-CN")}</span>
+        </div>
+        <h3>{entry.data.title}</h3>
+        <p>{entry.data.description}</p>
+        <div class="proj-tags">
+          {entry.data.techStack.map((tag) => (
+            <span class="pill">#{tag}</span>
+          ))}
+        </div>
+      </a>
+    ))}
+  </div>
+</BaseLayout>

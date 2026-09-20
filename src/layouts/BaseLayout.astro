@@ -1,5 +1,13 @@
 ---
 import "../styles/global.css";
+import "@fontsource/fraunces/400.css";
+import "@fontsource/fraunces/400-italic.css";
+import "@fontsource/fraunces/700.css";
+import "@fontsource/fraunces/900.css";
+import "@fontsource/fraunces/900-italic.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
+import "@fontsource/jetbrains-mono/700.css";
 
 interface Props {
   title?: string;
@@ -11,7 +19,7 @@ interface Props {
 }
 
 const {
-  title = "个人博客",
+  title = "Lane · 研究手帖",
   description = "记录学习、项目与安全研究。",
   image,
   type = "website",
@@ -21,7 +29,11 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImage = image ? new URL(image, Astro.site) : undefined;
+const pathname = Astro.url.pathname;
+const isActive = (path: string) =>
+  pathname === path || pathname.startsWith(path + "/") || (path === "/" && pathname === "/");
 ---
+
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -39,7 +51,7 @@ const ogImage = image ? new URL(image, Astro.site) : undefined;
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonicalURL} />
   <meta property="og:type" content={type} />
-  <meta property="og:site_name" content="Lane · 学习与安全研究" />
+  <meta property="og:site_name" content="Lane · 研究手帖" />
   <meta property="og:locale" content="zh_CN" />
   {ogImage && <meta property="og:image" content={ogImage} />}
   {published && <meta property="article:published_time" content={published.toISOString()} />}
@@ -82,33 +94,132 @@ const ogImage = image ? new URL(image, Astro.site) : undefined;
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "WebSite",
-      name: "Lane · 学习与安全研究",
+      name: "Lane · 研究手帖",
       url: Astro.site?.toString(),
       description: description,
       inLanguage: "zh-CN",
     })} />
   )}
+
+  <script is:inline>
+    // 防闪烁：尽早应用主题
+    (function () {
+      if (localStorage.theme === "dark") document.documentElement.classList.add("dark");
+    })();
+  </script>
 </head>
 <body>
-  <header>
-    <div class="shell nav">
-      <a class="brand" href="/">Lane</a>
-      <nav>
-        <a href="/notes">笔记</a>
-        <a href="/programs">项目</a>
-        <a href="/tags">标签</a>
-        <a href="/search">搜索</a>
-        <a href="/about">关于</a>
-        <button id="theme">◐</button>
+  <div class="read-progress" id="read-progress" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="shell site-nav">
+      <a class="brand" href="/">
+        <span class="seal">L</span>
+        <span>Lane</span>
+        <span class="brand-sub">/ field notes</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/notes" aria-current={isActive("/notes") ? "page" : undefined}><span class="nav-num">01</span>笔记</a>
+        <a href="/programs" aria-current={isActive("/programs") ? "page" : undefined}><span class="nav-num">02</span>项目</a>
+        <a href="/tags" aria-current={isActive("/tags") ? "page" : undefined}><span class="nav-num">03</span>标签</a>
+        <a href="/search" aria-current={isActive("/search") ? "page" : undefined}><span class="nav-num">04</span>搜索</a>
+        <a href="/about" aria-current={isActive("/about") ? "page" : undefined}><span class="nav-num">05</span>关于</a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="切换深色/浅色模式" title="切换主题">◑</button>
       </nav>
     </div>
   </header>
-  <main class="shell"><slot /></main>
-  <footer>
-    <div class="shell">© 2026 Lane · <a href="/rss.xml">RSS</a> · <a href="https://github.com/FerrersLEE">GitHub</a></div>
+
+  <main class="shell">
+    <slot />
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell">
+      <div class="footer-inner">
+        <span>© 2026 LANE · 研究手帖</span>
+        <span>
+          <a href="/rss.xml">RSS</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/FerrersLEE" target="_blank" rel="noopener">GITHUB</a>
+          &nbsp;·&nbsp;
+          <a href="mailto:laneferrers@gmail.com">EMAIL</a>
+        </span>
+      </div>
+      <span class="footer-giant">Field&nbsp;Notes</span>
+    </div>
   </footer>
+
   <script is:inline>
-    const r=document.documentElement;if(localStorage.theme==='dark')r.classList.add('dark');theme.onclick=()=>{r.classList.toggle('dark');localStorage.theme=r.classList.contains('dark')?'dark':'light'}
+    (function () {
+      // 主题切换
+      var toggle = document.getElementById("theme-toggle");
+      if (toggle) {
+        toggle.addEventListener("click", function () {
+          var root = document.documentElement;
+          root.classList.toggle("dark");
+          localStorage.theme = root.classList.contains("dark") ? "dark" : "light";
+        });
+      }
+
+      // 代码块：窗口化 + 复制按钮
+      var blocks = document.querySelectorAll(".article-content pre");
+      blocks.forEach(function (pre) {
+        if (pre.closest(".code-block-wrap")) return;
+        var wrap = document.createElement("div");
+        wrap.className = "code-block-wrap";
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(pre);
+
+        var btn = document.createElement("button");
+        btn.className = "copy-btn";
+        btn.type = "button";
+        btn.textContent = "复制";
+        btn.addEventListener("click", function () {
+          var code = pre.querySelector("code");
+          var text = code ? code.textContent : pre.textContent;
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = "已复制 ✓";
+            btn.classList.add("copied");
+            setTimeout(function () {
+              btn.textContent = "复制";
+              btn.classList.remove("copied");
+            }, 2000);
+          });
+        });
+        wrap.appendChild(btn);
+      });
+
+      // TOC 目录生成
+      var tocNav = document.querySelector("[data-toc]");
+      if (tocNav) {
+        var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+        if (headings.length === 0) {
+          var panel = document.querySelector(".toc-panel");
+          if (panel) panel.style.display = "none";
+        }
+        headings.forEach(function (h, i) {
+          h.id = h.id || "section-" + i;
+          var a = document.createElement("a");
+          a.href = "#" + h.id;
+          a.textContent = h.textContent;
+          if (h.tagName === "H3") a.style.paddingLeft = "14px";
+          tocNav.appendChild(a);
+        });
+      }
+
+      // 阅读进度条（仅文章页）
+      var progress = document.getElementById("read-progress");
+      if (progress && document.querySelector(".article-content")) {
+        window.addEventListener("scroll", function () {
+          var doc = document.documentElement;
+          var max = doc.scrollHeight - doc.clientHeight;
+          var pct = max > 0 ? (doc.scrollTop / max) * 100 : 0;
+          progress.style.width = pct + "%";
+        }, { passive: true });
+      } else if (progress) {
+        progress.style.display = "none";
+      }
+    })();
   </script>
 </body>
 </html>

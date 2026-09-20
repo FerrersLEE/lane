@@ -1,20 +1,78 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="关于 · Lane">
-  <article class="article">
-    <h1>关于我</h1>
-    <p class="lead">记录学习过程、项目实践和安全研究。</p>
 
-    <h2>研究方向</h2>
-    <p>Web 安全、漏洞复现、CTF 与开发工具。</p>
+<BaseLayout title="关于 · Lane · 研究手帖" description="关于 Lane：学习记录、项目实践与安全研究。">
+  <header class="page-head reveal">
+    <p class="eyebrow">/ 05 — About</p>
+    <h1>关于 Lane</h1>
+    <p class="page-desc">一个在网络世界里持续记录的人。</p>
+  </header>
 
-    <h2>联系我</h2>
-    <p>
-      <a href="mailto:laneferrers@gmail.com">laneferrers@gmail.com</a>
-    </p>
-    <p>
-      GitHub: <a href="https://github.com/FerrersLEE">@FerrersLEE</a>
-    </p>
-  </article>
+  <div class="about-grid">
+    <div class="reveal reveal-d1">
+      <div class="about-block">
+        <h2>这是什么地方</h2>
+        <p>
+          这里是我的研究手帖，用来沉淀学习笔记、项目实践和安全研究。
+          内容以计算机网络为起点，延伸到 Web 安全、漏洞复现与 CTF 解题。
+        </p>
+        <p>
+          我相信「写下来」才是真正学懂的开始——每一篇笔记都是一次复盘，
+          每一个项目都是一次实践。
+        </p>
+      </div>
+
+      <div class="about-block">
+        <h2>研究方向</h2>
+        <p>计算机网络 · Web 安全 · 漏洞复现 · CTF · 开发工具</p>
+      </div>
+
+      <div class="about-block">
+        <h2>原则</h2>
+        <p>所有安全实验仅在授权环境中进行；笔记只作防御与学习用途，不提供恶意利用指引。</p>
+      </div>
+
+      <div class="about-block">
+        <h2>联系方式</h2>
+        <div class="contact-row">
+          <span class="contact-key">Email</span>
+          <a href="mailto:laneferrers@gmail.com">laneferrers@gmail.com</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-key">GitHub</span>
+          <a href="https://github.com/FerrersLEE" target="_blank" rel="noopener">@FerrersLEE</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-key">RSS</span>
+          <a href="/rss.xml">/rss.xml</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal reveal reveal-d2">
+      <div class="terminal-bar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="terminal-title">about.md</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="prompt">$</span> <span class="cmd">cat about.md</span></div>
+        <div style="height:6px"></div>
+        <div class="out">name: <span class="hl">Lane</span></div>
+        <div class="out">role: student / researcher</div>
+        <div class="out">focus:</div>
+        <div class="out">&nbsp;&nbsp;- networking</div>
+        <div class="out">&nbsp;&nbsp;- <span class="hl">web security</span></div>
+        <div class="out">&nbsp;&nbsp;- ctf</div>
+        <div class="out">blog_stack:</div>
+        <div class="out">&nbsp;&nbsp;- astro / cloudflare pages</div>
+        <div class="out">status: <span class="ok">● always learning</span></div>
+        <div style="height:6px"></div>
+        <div><span class="prompt">$</span> <span class="cmd">echo $MANTRA</span></div>
+        <div class="out">→ 记录，是最好的学习<span class="cursor-blink"></span></div>
+      </div>
+    </div>
+  </div>
 </BaseLayout>

@@ -1,29 +1,129 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const notes = (await getCollection("notes", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+const programs = (await getCollection("programs", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+
+const tagSet = new Set<string>();
+notes.forEach((n) => n.data.tags.forEach((t) => tagSet.add(t)));
+programs.forEach((p) => p.data.tags.forEach((t) => tagSet.add(t)));
+
+const latestNotes = notes.slice(0, 4);
+const latestPrograms = programs.slice(0, 3);
+const pad = (n: number) => String(n + 1).padStart(2, "0");
 ---
-<BaseLayout title="Lane · 学习与安全研究">
-<section class="hero">
-  <p class="meta">学习记录 · 项目实践 · 安全研究</p>
-  <h1>把学到的东西，整理成可复用的笔记。</h1>
-  <p class="lead">记录学习笔记、项目实践、CTF 解题和漏洞研究。内容以授权实验环境为边界。</p>
-  <div class="actions">
-    <a class="button" href="/notes">查看笔记</a>
-    <a class="button" href="/programs">查看项目</a>
-  </div>
-</section>
-<h2>最新笔记</h2>
-<div class="grid">
-  <article class="card">
-    <div class="meta">2026-08-21</div>
-    <h3><a href="/notes/first-note">第一篇学习笔记</a></h3>
-    <p>用于验证 Markdown、代码高亮和文章页面渲染。</p>
-  </article>
-</div>
-<h2>精选项目</h2>
-<div class="grid">
-  <article class="card">
-    <h3><a href="/programs/knowledge-blog">个人知识博客</a></h3>
-    <p>使用 Astro、Markdown 和 Cloudflare Pages 构建。</p>
-  </article>
-</div>
+
+<BaseLayout title="Lane · 研究手帖 — 学习与安全研究">
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div>
+      <p class="eyebrow reveal">学习记录 · 项目实践 · 安全研究</p>
+      <h1 class="hero-title reveal reveal-d1">
+        把学到的东西，<br />
+        整理成<em>可复用</em>的笔记。
+      </h1>
+      <p class="hero-lead reveal reveal-d2">
+        这里是 Lane 的研究手帖——计算机网络、Web 安全、CTF 解题与开发实践。
+        所有实验以授权环境为边界，所有记录为复盘而写。
+      </p>
+      <div class="hero-actions reveal reveal-d3">
+        <a class="btn" href="/notes">翻阅笔记 →</a>
+        <a class="btn btn-ghost" href="/programs">查看项目</a>
+      </div>
+      <div class="hero-stats reveal reveal-d4">
+        <div class="hero-stat">
+          <span class="stat-num">{notes.length}</span>
+          <span class="stat-label">Notes / 笔记</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">{programs.length}</span>
+          <span class="stat-label">Projects / 项目</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-num">{tagSet.size}</span>
+          <span class="stat-label">Tags / 标签</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal reveal reveal-d2" aria-hidden="false">
+      <div class="terminal-bar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="terminal-title">lane@field-notes: ~</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="prompt">$</span> <span class="cmd">whoami</span></div>
+        <div class="out">→ lane — security researcher</div>
+        <div style="height:8px"></div>
+        <div><span class="prompt">$</span> <span class="cmd">cat interests.txt</span></div>
+        <div class="out">→ <span class="hl">web-security</span> / <span class="hl">ctf</span> / networking</div>
+        <div style="height:8px"></div>
+        <div><span class="prompt">$</span> <span class="cmd">ls ./notes | head -3</span></div>
+        {latestNotes.slice(0, 3).map((n) => (
+          <div class="out">→ {n.id}.md</div>
+        ))}
+        <div style="height:8px"></div>
+        <div><span class="prompt">$</span> <span class="cmd">status</span></div>
+        <div class="out">→ <span class="ok">● recording in progress</span><span class="cursor-blink"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 最新笔记 ============ -->
+  <section class="home-section">
+    <div class="section-head reveal">
+      <h2><span class="sec-num">/ 01</span>最新笔记</h2>
+      <a class="sec-more" href="/notes">查看全部 →</a>
+    </div>
+    <div>
+      {latestNotes.map((entry, i) => (
+        <a class={`post-row reveal reveal-d${Math.min(i + 1, 5)}`} href={`/notes/${entry.id}`}>
+          <span class="row-index">{pad(i)}</span>
+          <span class="row-date">{entry.data.published.toLocaleDateString("zh-CN")}</span>
+          <span>
+            <span class="row-title">{entry.data.title}</span>
+            <p class="row-desc">{entry.data.description}</p>
+            <span class="row-tags">
+              {entry.data.tags.slice(0, 3).map((tag) => (
+                <span class="pill">#{tag}</span>
+              ))}
+            </span>
+          </span>
+          <span class="row-arrow">→</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- ============ 精选项目 ============ -->
+  <section class="home-section">
+    <div class="section-head reveal">
+      <h2><span class="sec-num">/ 02</span>精选项目</h2>
+      <a class="sec-more" href="/programs">查看全部 →</a>
+    </div>
+    <div class="proj-grid">
+      {latestPrograms.map((entry) => (
+        <a class="card-hard proj-card reveal" href={`/programs/${entry.id}`}>
+          <div class="proj-top">
+            <span class={`badge ${entry.data.status?.includes("完成") ? "badge-done" : "badge-active"}`}>
+              {entry.data.status ?? "进行中"}
+            </span>
+            <span class="kicker">→</span>
+          </div>
+          <h3>{entry.data.title}</h3>
+          <p>{entry.data.description}</p>
+          <div class="proj-tags">
+            {entry.data.techStack.slice(0, 4).map((tag) => (
+              <span class="pill">#{tag}</span>
+            ))}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
 </BaseLayout>
