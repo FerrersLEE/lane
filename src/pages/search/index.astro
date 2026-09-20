@@ -1,4 +1,167 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="搜索 · 你的名字"><article class="article"><h1>搜索</h1><p class="lead">搜索功能将在内容数量增加后接入构建时索引。</p><input aria-label="搜索文章" placeholder="输入关键词" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)" /></article></BaseLayout>
+<BaseLayout title="搜索 · 你的名字">
+  <article class="article">
+    <h1>搜索</h1>
+    <p class="lead">在笔记和项目中搜索关键词。</p>
+    <input
+      id="search-input"
+      aria-label="搜索文章"
+      type="search"
+      placeholder="输入关键词，如：安全、Astro、Python..."
+      autocomplete="off"
+      style="width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font-size:1rem;outline:none;transition:border-color .2s"
+      onfocus="this.style.borderColor='var(--accent)'"
+      onblur="this.style.borderColor='var(--line)'"
+    />
+    <div id="search-stats" style="margin-top:16px;color:var(--muted);font-size:.9rem;min-height:1.5rem"></div>
+    <div id="search-results" class="grid" style="margin-top:20px"></div>
+  </article>
+
+  <script is:inline>
+    (function() {
+      var index = [];
+      var loaded = false;
+
+      var input = document.getElementById('search-input');
+      var resultsEl = document.getElementById('search-results');
+      var statsEl = document.getElementById('search-stats');
+
+      function loadIndex() {
+        if (loaded) return Promise.resolve();
+        return fetch('/search-index.json')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            index = data;
+            loaded = true;
+          })
+          .catch(function() {
+            if (statsEl) statsEl.textContent = '搜索索引加载失败';
+          });
+      }
+
+      function highlight(text, query) {
+        if (!query) return text;
+        var escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var regex = new RegExp('(' + escaped + ')', 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+      }
+
+      function search(query) {
+        var q = query.trim().toLowerCase();
+        if (!q) return [];
+
+        return index
+          .map(function(item) {
+            var titleMatch = item.title.toLowerCase().includes(q);
+            var descMatch = item.description.toLowerCase().includes(q);
+            var tagMatch = item.tags.some(function(t) { return t.toLowerCase().includes(q); });
+            var contentMatch = item.content.toLowerCase().includes(q);
+
+            var score = 0;
+            if (titleMatch) score += 10;
+            if (tagMatch) score += 5;
+            if (descMatch) score += 3;
+            if (contentMatch) score += 1;
+
+            return { item: item, score: score, contentMatch: contentMatch };
+          })
+          .filter(function(r) { return r.score > 0; })
+          .sort(function(a, b) { return b.score - a.score; })
+          .map(function(r) { return r.item; });
+      }
+
+      function getSnippet(content, query) {
+        var q = query.toLowerCase();
+        var idx = content.toLowerCase().indexOf(q);
+        if (idx === -1) return content.slice(0, 120) + '...';
+        var start = Math.max(0, idx - 40);
+        var end = Math.min(content.length, idx + q.length + 80);
+        return (start > 0 ? '...' : '') + content.slice(start, end) + (end < content.length ? '...' : '');
+      }
+
+      function renderResults(results, query) {
+        if (!query.trim()) {
+          if (resultsEl) resultsEl.innerHTML = '';
+          if (statsEl) statsEl.textContent = '输入关键词开始搜索';
+          return;
+        }
+
+        if (results.length === 0) {
+          if (resultsEl) resultsEl.innerHTML = '';
+          if (statsEl) statsEl.textContent = '没有找到与 "' + query + '" 相关的内容';
+          return;
+        }
+
+        if (statsEl) statsEl.textContent = '找到 ' + results.length + ' 个结果';
+
+        if (resultsEl) {
+          resultsEl.innerHTML = results
+            .map(function(item) {
+              var typeLabel = item.type === 'note' ? '笔记' : '项目';
+              var typeBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:6px;background:var(--accent);color:#fff;font-size:.75rem;margin-right:8px">' + typeLabel + '</span>';
+              var snippet = item.content ? getSnippet(item.content, query) : item.description;
+              var tagsHtml = item.tags.map(function(t) { return '<span class="tag">#' + t + '</span>'; }).join(' ');
+              return (
+                '<article class="card" style="cursor:pointer" onclick="location.href=\'' + item.url + '\'">' +
+                  '<div class="meta">' + typeBadge + new Date(item.published).toLocaleDateString("zh-CN") + '</div>' +
+                  '<h3 style="margin:8px 0"><a href="' + item.url + '" style="color:var(--text)">' + highlight(item.title, query) + '</a></h3>' +
+                  '<p style="color:var(--muted);font-size:.9rem;line-height:1.6">' + highlight(snippet, query) + '</p>' +
+                  '<div style="margin-top:8px">' + tagsHtml + '</div>' +
+                '</article>'
+              );
+            })
+            .join('');
+        }
+      }
+
+      var debounceTimer = null;
+      if (input) {
+        input.addEventListener('input', function(e) {
+          var query = (e.target || {}).value || '';
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(function() {
+            loadIndex().then(function() {
+              var results = search(query);
+              renderResults(results, query);
+            });
+          }, 150);
+        });
+      }
+
+      // 支持 URL 参数直接搜索
+      var params = new URLSearchParams(window.location.search);
+      var q = params.get('q');
+      if (q && input) {
+        input.value = q;
+        input.dispatchEvent(new Event('input'));
+      } else if (statsEl) {
+        statsEl.textContent = '输入关键词开始搜索';
+      }
+    })();
+  </script>
+
+  <style is:global>
+    mark {
+      background: #fef08a;
+      color: #172033;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+    .dark mark {
+      background: #854d0e;
+      color: #fef9c3;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--line);
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+  </style>
+</BaseLayout>

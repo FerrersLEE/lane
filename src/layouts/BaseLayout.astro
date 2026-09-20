@@ -1,5 +1,113 @@
 ---
 import "../styles/global.css";
-const {title="个人博客",description="记录学习、项目与安全研究。"}=Astro.props;
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
+  published?: Date;
+  tags?: string[];
+}
+
+const {
+  title = "个人博客",
+  description = "记录学习、项目与安全研究。",
+  image,
+  type = "website",
+  published,
+  tags = [],
+}: Props = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImage = image ? new URL(image, Astro.site) : undefined;
 ---
-<html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><meta name="description" content={description}/><title>{title}</title></head><body><header><div class="shell nav"><a class="brand" href="/">你的名字</a><nav><a href="/notes">笔记</a><a href="/programs">项目</a><a href="/about">关于</a><button id="theme">◐</button></nav></div></header><main class="shell"><slot/></main><footer><div class="shell">© 2026 你的名字 · <a href="/rss.xml">RSS</a> · <a href="https://github.com/">GitHub</a></div></footer><script is:inline>{`const r=document.documentElement;if(localStorage.theme==='dark')r.classList.add('dark');theme.onclick=()=>{r.classList.toggle('dark');localStorage.theme=r.classList.contains('dark')?'dark':'light'}`}</script></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml" />
+  <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+
+  <title>{title}</title>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:type" content={type} />
+  <meta property="og:site_name" content="你的名字 · 学习与安全研究" />
+  <meta property="og:locale" content="zh_CN" />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  {published && <meta property="article:published_time" content={published.toISOString()} />}
+  {tags.map((tag: string) => <meta property="article:tag" content={tag} />)}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+  <!-- JSON-LD 结构化数据 -->
+  {type === "article" && published && (
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: title,
+      description: description,
+      datePublished: published.toISOString(),
+      dateModified: published.toISOString(),
+      keywords: tags.join(", "),
+      url: canonicalURL.toString(),
+      image: ogImage?.toString(),
+      author: {
+        "@type": "Person",
+        name: "你的名字",
+      },
+      publisher: {
+        "@type": "Person",
+        name: "你的名字",
+      },
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": canonicalURL.toString(),
+      },
+    })} />
+  )}
+
+  {type === "website" && (
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "你的名字 · 学习与安全研究",
+      url: Astro.site?.toString(),
+      description: description,
+      inLanguage: "zh-CN",
+    })} />
+  )}
+</head>
+<body>
+  <header>
+    <div class="shell nav">
+      <a class="brand" href="/">你的名字</a>
+      <nav>
+        <a href="/notes">笔记</a>
+        <a href="/programs">项目</a>
+        <a href="/tags">标签</a>
+        <a href="/search">搜索</a>
+        <a href="/about">关于</a>
+        <button id="theme">◐</button>
+      </nav>
+    </div>
+  </header>
+  <main class="shell"><slot /></main>
+  <footer>
+    <div class="shell">© 2026 你的名字 · <a href="/rss.xml">RSS</a> · <a href="https://github.com/">GitHub</a></div>
+  </footer>
+  <script is:inline>{
+    `const r=document.documentElement;if(localStorage.theme==='dark')r.classList.add('dark');theme.onclick=()=>{r.classList.toggle('dark');localStorage.theme=r.classList.contains('dark')?'dark':'light'}`
+  }</script>
+</body>
+</html>

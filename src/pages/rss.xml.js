@@ -1,2 +1,35 @@
 import rss from '@astrojs/rss';
-export const GET = (context) => rss({title:'你的名字 · 学习与安全研究',description:'学习笔记、项目实践与安全研究。',site:context.site ?? 'https://example.pages.dev',items:[{title:'第一篇学习笔记',description:'用于验证 Markdown、代码高亮和文章页面渲染。',pubDate:new Date('2026-08-21'),link:'/notes/first-note/'}]});
+import { getCollection } from 'astro:content';
+
+export async function GET(context) {
+  const notes = (await getCollection('notes', ({ data }) => !data.draft))
+    .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+
+  const programs = (await getCollection('programs', ({ data }) => !data.draft))
+    .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+
+  const items = [
+    ...notes.map((entry) => ({
+      title: entry.data.title,
+      description: entry.data.description,
+      pubDate: entry.data.published,
+      link: `/notes/${entry.id}/`,
+      categories: entry.data.tags,
+    })),
+    ...programs.map((entry) => ({
+      title: `[项目] ${entry.data.title}`,
+      description: entry.data.description,
+      pubDate: entry.data.published,
+      link: `/programs/${entry.id}/`,
+      categories: entry.data.tags,
+    })),
+  ].sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
+
+  return rss({
+    title: '你的名字 · 学习与安全研究',
+    description: '学习笔记、项目实践与安全研究。',
+    site: context.site,
+    items,
+    customData: `<language>zh-CN</language>`,
+  });
+}

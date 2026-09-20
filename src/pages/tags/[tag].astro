@@ -1,0 +1,66 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const notes = await getCollection("notes", ({ data }) => !data.draft);
+  const programs = await getCollection("programs", ({ data }) => !data.draft);
+
+  const tagSet = new Set<string>();
+  for (const entry of notes) {
+    for (const tag of entry.data.tags) tagSet.add(tag);
+  }
+  for (const entry of programs) {
+    for (const tag of entry.data.tags) tagSet.add(tag);
+  }
+
+  return [...tagSet].map((tag) => ({ params: { tag } }));
+}
+
+const tag = Astro.params.tag as string;
+
+const notes = (await getCollection("notes", ({ data }) => !data.draft && data.tags.includes(tag)))
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+
+const programs = (await getCollection("programs", ({ data }) => !data.draft && data.tags.includes(tag)))
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+---
+<BaseLayout title={`#${tag} · 你的名字`} description={`标签 ${tag} 下的所有笔记和项目`}>
+  <article class="article">
+    <p style="margin-bottom:8px">
+      <a href="/tags" style="color:var(--muted);font-size:.9rem">← 返回所有标签</a>
+    </p>
+    <h1 style="margin-top:0">#{tag}</h1>
+    <p class="lead">共 {notes.length + programs.length} 篇内容（{notes.length} 篇笔记，{programs.length} 个项目）。</p>
+
+    {notes.length > 0 && (
+      <>
+        <h2 style="margin-top:32px">笔记</h2>
+        <div class="grid">
+          {notes.map((entry) => (
+            <article class="card">
+              <div class="meta">{entry.data.published.toLocaleDateString("zh-CN")}</div>
+              <h3><a href={`/notes/${entry.id}`}>{entry.data.title}</a></h3>
+              <p>{entry.data.description}</p>
+            </article>
+          ))}
+        </div>
+      </>
+    )}
+
+    {programs.length > 0 && (
+      <>
+        <h2 style="margin-top:32px">项目</h2>
+        <div class="grid">
+          {programs.map((entry) => (
+            <article class="card">
+              <div class="meta">{entry.data.status ?? "进行中"}</div>
+              <h3><a href={`/programs/${entry.id}`}>{entry.data.title}</a></h3>
+              <p>{entry.data.description}</p>
+            </article>
+          ))}
+        </div>
+      </>
+    )}
+  </article>
+</BaseLayout>
