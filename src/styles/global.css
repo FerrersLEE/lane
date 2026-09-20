@@ -106,7 +106,7 @@ a {
   text-decoration: none;
 }
 
-img { max-width: 100%; }
+img { max-width: 100%; height: auto; }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
@@ -747,6 +747,8 @@ a.pill:hover {
 }
 
 .article-content img {
+  max-width: 100%;
+  height: auto;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
   box-shadow: 4px 4px 0 var(--shadow);
