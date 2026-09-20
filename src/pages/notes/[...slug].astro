@@ -62,8 +62,8 @@ const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
     </nav>
   </article>
 
-  <script is:inline>{
-    `// 目录生成
+  <script is:inline>
+    // 目录生成
     (function() {
       var toc = document.querySelector('.toc');
       document.querySelectorAll('.article-content h2,.article-content h3').forEach(function(h, i) {
@@ -102,8 +102,7 @@ const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
         wrap.appendChild(btn);
       });
     })();
-    `
-  }</script>
+  </script>
 
   <style is:global>
     /* meta 信息区 */

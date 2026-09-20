@@ -107,8 +107,8 @@ const ogImage = image ? new URL(image, Astro.site) : undefined;
   <footer>
     <div class="shell">© 2026 Lane · <a href="/rss.xml">RSS</a> · <a href="https://github.com/FerrersLEE">GitHub</a></div>
   </footer>
-  <script is:inline>{
-    `const r=document.documentElement;if(localStorage.theme==='dark')r.classList.add('dark');theme.onclick=()=>{r.classList.toggle('dark');localStorage.theme=r.classList.contains('dark')?'dark':'light'}`
-  }</script>
+  <script is:inline>
+    const r=document.documentElement;if(localStorage.theme==='dark')r.classList.add('dark');theme.onclick=()=>{r.classList.toggle('dark');localStorage.theme=r.classList.contains('dark')?'dark':'light'}
+  </script>
 </body>
 </html>

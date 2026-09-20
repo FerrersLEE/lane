@@ -59,8 +59,8 @@ const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
     </nav>
   </article>
 
-  <script is:inline>{
-    `// 代码块复制按钮（CSDN风格，每个代码块右上角一个）
+  <script is:inline>
+    // 代码块复制按钮（CSDN风格，每个代码块右上角一个）
     (function() {
       var blocks = document.querySelectorAll('.article-content pre');
       blocks.forEach(function(pre) {
@@ -87,8 +87,7 @@ const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
         wrap.appendChild(btn);
       });
     })();
-    `
-  }</script>
+  </script>
 
   <style is:global>
     /* meta 信息区 */
