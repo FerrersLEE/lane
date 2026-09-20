@@ -44,6 +44,34 @@ const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
     <h1 class="reveal reveal-d1">{entry.data.title}</h1>
     <p class="lead reveal reveal-d2">{entry.data.description}</p>
 
+    {(entry.data.repoUrl || entry.data.demoUrl || entry.data.techStack.length) && (
+      <div class="terminal reveal reveal-d2" style="margin-bottom:36px">
+        <div class="terminal-bar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="terminal-title">project-info</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="prompt">$</span> <span class="cmd">cat project.yaml</span></div>
+          <div style="height:8px"></div>
+          <div class="out">status: <span class={entry.data.status?.includes("完成") ? "ok" : "hl"}>{entry.data.status ?? "进行中"}</span></div>
+          {entry.data.techStack.length > 0 && (
+            <div class="out">stack: <span class="hl">{entry.data.techStack.join(" / ")}</span></div>
+          )}
+          {entry.data.repoUrl && (
+            <div class="out">repo: <a href={entry.data.repoUrl} target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">github ↗</a></div>
+          )}
+          {entry.data.demoUrl && (
+            <div class="out">demo: <a href={entry.data.demoUrl} target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">live demo ↗</a></div>
+          )}
+          <div style="height:6px"></div>
+          <div><span class="prompt">$</span> <span class="cmd">echo $STATUS</span></div>
+          <div class="out">→ <span class="ok">● active development</span><span class="cursor-blink"></span></div>
+        </div>
+      </div>
+    )}
+
     <div class="article-content reveal reveal-d3">
       <Content />
     </div>
