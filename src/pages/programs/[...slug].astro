@@ -3,12 +3,22 @@ import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 export async function getStaticPaths() {
-  const entries = await getCollection("programs", ({ data }) => !data.draft);
-  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+  const entries = (await getCollection("programs", ({ data }) => !data.draft))
+    .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry, allEntries: entries } }));
 }
 
-const { entry } = Astro.props;
+const { entry, allEntries } = Astro.props;
 const { Content } = await render(entry);
+
+// 阅读时间估算
+const plainText = (entry.body ?? "").replace(/[#*`>\-\[\]_~!\[\]()]/g, "").replace(/\s+/g, "");
+const readingMinutes = Math.max(1, Math.ceil(plainText.length / 400));
+
+// 上下篇
+const currentIndex = allEntries.findIndex((e: any) => e.id === entry.id);
+const prevEntry = currentIndex < allEntries.length - 1 ? allEntries[currentIndex + 1] : null;
+const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
 ---
 <BaseLayout
   title={`${entry.data.title} · 你的名字`}
@@ -18,12 +28,82 @@ const { Content } = await render(entry);
   tags={entry.data.tags}
 >
   <article class="article">
-    <div class="meta">项目 · {entry.data.status ?? "进行中"}</div>
+    <div class="meta">项目 · {entry.data.status ?? "进行中"} · 约 {readingMinutes} 分钟阅读</div>
     <h1>{entry.data.title}</h1>
     <p class="lead">{entry.data.description}</p>
     <div class="tags">
       {entry.data.techStack.map((tag) => `<a href="/tags/${tag}" style="color:var(--muted);font-size:.85rem">#${tag}</a>`).join(" ")}
     </div>
     <div class="article-content"><Content /></div>
+
+    <!-- 上下篇导航 -->
+    <nav class="post-nav" aria-label="项目导航">
+      {prevEntry && (
+        <a href={`/programs/${prevEntry.id}`} class="post-nav-prev">
+          <span class="post-nav-label">← 上一个项目</span>
+          <span class="post-nav-title">{prevEntry.data.title}</span>
+        </a>
+      )}
+      {!prevEntry && <div class="post-nav-empty"></div>}
+      {nextEntry && (
+        <a href={`/programs/${nextEntry.id}`} class="post-nav-next">
+          <span class="post-nav-label">下一个项目 →</span>
+          <span class="post-nav-title">{nextEntry.data.title}</span>
+        </a>
+      )}
+    </nav>
   </article>
+
+  <style is:global>
+    .post-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+    }
+    .post-nav a {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      transition: all .2s;
+    }
+    .post-nav a:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .post-nav-prev {
+      text-align: left;
+    }
+    .post-nav-next {
+      text-align: right;
+      grid-column: 2;
+    }
+    .post-nav-label {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    .post-nav-title {
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .post-nav-empty {
+      display: none;
+    }
+    @media (max-width: 640px) {
+      .post-nav {
+        grid-template-columns: 1fr;
+      }
+      .post-nav-next {
+        grid-column: 1;
+        text-align: left;
+      }
+    }
+  </style>
 </BaseLayout>

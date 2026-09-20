@@ -3,12 +3,22 @@ import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 export async function getStaticPaths() {
-  const entries = await getCollection("notes", ({ data }) => !data.draft);
-  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+  const entries = (await getCollection("notes", ({ data }) => !data.draft))
+    .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry, allEntries: entries } }));
 }
 
-const { entry } = Astro.props;
+const { entry, allEntries } = Astro.props;
 const { Content } = await render(entry);
+
+// 阅读时间估算：中文约 400 字/分钟，取最大值保证不低估
+const plainText = (entry.body ?? "").replace(/[#*`>\-\[\]_~!\[\]()]/g, "").replace(/\s+/g, "");
+const readingMinutes = Math.max(1, Math.ceil(plainText.length / 400));
+
+// 上下篇
+const currentIndex = allEntries.findIndex((e: any) => e.id === entry.id);
+const prevEntry = currentIndex < allEntries.length - 1 ? allEntries[currentIndex + 1] : null;
+const nextEntry = currentIndex > 0 ? allEntries[currentIndex - 1] : null;
 ---
 <BaseLayout
   title={`${entry.data.title} · 你的名字`}
@@ -20,6 +30,7 @@ const { Content } = await render(entry);
   <article class="article">
     <div class="meta">
       {entry.data.published.toLocaleDateString("zh-CN")} ·
+      约 {readingMinutes} 分钟阅读 ·
       {entry.data.tags.map((tag) => `<a href="/tags/${tag}" style="color:var(--muted)">#${tag}</a>`).join(" ")}
     </div>
     <h1>{entry.data.title}</h1>
@@ -29,9 +40,79 @@ const { Content } = await render(entry);
       <nav class="toc" aria-label="文章目录"></nav>
     </div>
     <div class="article-content"><Content /></div>
+
+    <!-- 上下篇导航 -->
+    <nav class="post-nav" aria-label="文章导航">
+      {prevEntry && (
+        <a href={`/notes/${prevEntry.id}`} class="post-nav-prev">
+          <span class="post-nav-label">← 上一篇</span>
+          <span class="post-nav-title">{prevEntry.data.title}</span>
+        </a>
+      )}
+      {!prevEntry && <div class="post-nav-empty"></div>}
+      {nextEntry && (
+        <a href={`/notes/${nextEntry.id}`} class="post-nav-next">
+          <span class="post-nav-label">下一篇 →</span>
+          <span class="post-nav-title">{nextEntry.data.title}</span>
+        </a>
+      )}
+    </nav>
   </article>
 
   <script is:inline>{
     `document.querySelector('[data-copy]')?.addEventListener('click',async()=>{const blocks=[...document.querySelectorAll('pre code')];await navigator.clipboard.writeText(blocks.map(b=>b.textContent).join('\\n'));alert('代码已复制')});const toc=document.querySelector('.toc');document.querySelectorAll('.article-content h2,.article-content h3').forEach((h,i)=>{h.id=h.id||'section-'+i;const a=document.createElement('a');a.href='#'+h.id;a.textContent=h.textContent;toc?.append(a)});`
   }</script>
+
+  <style is:global>
+    .post-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+    }
+    .post-nav a {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      transition: all .2s;
+    }
+    .post-nav a:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .post-nav-prev {
+      text-align: left;
+    }
+    .post-nav-next {
+      text-align: right;
+      grid-column: 2;
+    }
+    .post-nav-label {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    .post-nav-title {
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .post-nav-empty {
+      display: none;
+    }
+    @media (max-width: 640px) {
+      .post-nav {
+        grid-template-columns: 1fr;
+      }
+      .post-nav-next {
+        grid-column: 1;
+        text-align: left;
+      }
+    }
+  </style>
 </BaseLayout>
